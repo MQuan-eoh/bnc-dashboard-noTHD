@@ -7,7 +7,13 @@ import Bar3DChart from "./components/Bar3DChart";
 const generateMockHistory = (baseValue, variance, count = 24) => {
   return Array.from({ length: count }, (_, i) => ({
     time: `${i}:00`,
-    value: Number(
+    value1: Number(
+      (baseValue + (Math.random() * variance * 2 - variance)).toFixed(1)
+    ),
+    value2: Number(
+      (baseValue + (Math.random() * variance * 2 - variance)).toFixed(1)
+    ),
+    value3: Number(
       (baseValue + (Math.random() * variance * 2 - variance)).toFixed(1)
     ),
   }));
@@ -115,8 +121,11 @@ function App() {
           <EnergyChart
             id="voltageChart"
             data={voltageHistory}
-            dataKey="value"
-            color="#ffd700"
+            lines={[
+              { key: "value1", color: "#FFD700", name: "U1" },
+              { key: "value2", color: "#FF9100", name: "U2" },
+              { key: "value3", color: "#FFFF00", name: "U3" },
+            ]}
             unit="V"
             height="150px"
           />
@@ -151,8 +160,11 @@ function App() {
           <EnergyChart
             id="currentChart"
             data={currentHistory}
-            dataKey="value"
-            color="#00ff00"
+            lines={[
+              { key: "value1", color: "#00E676", name: "I1" },
+              { key: "value2", color: "#00B8D4", name: "I2" },
+              { key: "value3", color: "#64DD17", name: "I3" },
+            ]}
             unit="A"
             height="150px"
           />
@@ -193,8 +205,11 @@ function App() {
           <EnergyChart
             id="powerChart"
             data={powerHistory}
-            dataKey="value"
-            color="#ff8c00"
+            lines={[
+              { key: "value1", color: "#FF3D00", name: "P1" },
+              { key: "value2", color: "#FF9100", name: "P2" },
+              { key: "value3", color: "#FFEA00", name: "P3" },
+            ]}
             unit="kW"
             height="150px"
           />
@@ -240,8 +255,11 @@ function App() {
           <EnergyChart
             id="thdChart"
             data={thdHistory}
-            dataKey="value"
-            color="#00bfff"
+            lines={[
+              { key: "value1", color: "#2962FF", name: "THD1" },
+              { key: "value2", color: "#00B0FF", name: "THD2" },
+              { key: "value3", color: "#00E5FF", name: "THD3" },
+            ]}
             unit="%"
             height="150px"
           />

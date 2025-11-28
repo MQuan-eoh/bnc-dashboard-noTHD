@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   AreaChart,
   Area,
@@ -7,17 +7,26 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
+  Legend,
 } from "recharts";
 
 const EnergyChart = ({
   id,
   data,
-  dataKey,
-  color = "#8884d8",
+  lines = [], // Array of { key, color, name }
   unit,
   height = "200px",
 }) => {
-  const gradientId = `color-${id || Math.random().toString(36).substr(2, 9)}`;
+  const [hiddenKeys, setHiddenKeys] = useState([]);
+
+  const handleLegendClick = (e) => {
+    const { dataKey } = e;
+    setHiddenKeys((prev) =>
+      prev.includes(dataKey)
+        ? prev.filter((key) => key !== dataKey)
+        : [...prev, dataKey]
+    );
+  };
 
   return (
     <div style={{ height: height, width: "100%", marginTop: "1rem" }}>
@@ -27,15 +36,24 @@ const EnergyChart = ({
           margin={{
             top: 5,
             right: 0,
-            left: -20, // Pull left to maximize space
+            left: -20,
             bottom: 0,
           }}
         >
           <defs>
-            <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor={color} stopOpacity={0.8} />
-              <stop offset="95%" stopColor={color} stopOpacity={0} />
-            </linearGradient>
+            {lines.map((line) => (
+              <linearGradient
+                key={line.key}
+                id={`color-${id}-${line.key}`}
+                x1="0"
+                y1="0"
+                x2="0"
+                y2="1"
+              >
+                <stop offset="5%" stopColor={line.color} stopOpacity={0.8} />
+                <stop offset="95%" stopColor={line.color} stopOpacity={0} />
+              </linearGradient>
+            ))}
           </defs>
           <CartesianGrid
             strokeDasharray="3 3"
@@ -67,13 +85,22 @@ const EnergyChart = ({
             itemStyle={{ color: "#fff" }}
             labelStyle={{ color: "#ccc" }}
           />
-          <Area
-            type="monotone"
-            dataKey={dataKey}
-            stroke={color}
-            fillOpacity={1}
-            fill={`url(#${gradientId})`}
+          <Legend
+            onClick={handleLegendClick}
+            wrapperStyle={{ cursor: "pointer", paddingTop: "10px" }}
           />
+          {lines.map((line) => (
+            <Area
+              key={line.key}
+              type="monotone"
+              dataKey={line.key}
+              name={line.name}
+              stroke={line.color}
+              fillOpacity={1}
+              fill={`url(#color-${id}-${line.key})`}
+              hide={hiddenKeys.includes(line.key)}
+            />
+          ))}
         </AreaChart>
       </ResponsiveContainer>
     </div>
