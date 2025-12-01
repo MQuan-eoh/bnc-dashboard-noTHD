@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import "./App.css";
 import EnergyChart from "./components/EnergyChart";
 import Bar3DChart from "./components/Bar3DChart";
+import eraWidget from "@eohjsc/era-widget";
 
 function App() {
   const [showFullTHD, setShowFullTHD] = useState(false);
@@ -55,105 +56,92 @@ function App() {
   const [thdHistory, setThdHistory] = useState([]);
 
   useEffect(() => {
-    const initEraWidget = () => {
-      if (typeof window.EraWidget !== "function") {
-        console.warn("EraWidget library not loaded yet. Retrying...");
-        setTimeout(initEraWidget, 500);
-        return;
-      }
+    eraWidget.init({
+      needRealtimeConfigs: true,
+      needHistoryConfigs: true,
+      needActions: true,
+      maxRealtimeConfigsCount: 20,
+      maxHistoryConfigsCount: 1,
+      maxActionsCount: 2,
+      minRealtimeConfigsCount: 0,
+      minHistoryConfigsCount: 0,
+      minActionsCount: 0,
+      onConfiguration: (configuration) => {
+        // Store the IDs in order: U1, U2, U3, I1, I2, I3, P1, P2, P3, ...
+        configIdsRef.current = configuration.realtime_configs.map((c) => c.id);
+        console.log("E-RA Configuration Loaded:", configIdsRef.current);
+      },
+      onValues: (values) => {
+        const ids = configIdsRef.current;
+        if (ids.length === 0) return;
 
-      const eraWidget = new window.EraWidget();
-      eraWidget.init({
-        needRealtimeConfigs: true,
-        needHistoryConfigs: true,
-        needActions: true,
-        maxRealtimeConfigsCount: 20,
-        maxHistoryConfigsCount: 1,
-        maxActionsCount: 2,
-        minRealtimeConfigsCount: 0,
-        minHistoryConfigsCount: 0,
-        minActionsCount: 0,
-        onConfiguration: (configuration) => {
-          // Store the IDs in order: U1, U2, U3, I1, I2, I3, P1, P2, P3, ...
-          configIdsRef.current = configuration.realtime_configs.map(
-            (c) => c.id
-          );
-          console.log("E-RA Configuration Loaded:", configIdsRef.current);
-        },
-        onValues: (values) => {
-          const ids = configIdsRef.current;
-          if (ids.length === 0) return;
+        const getValue = (index) =>
+          ids[index] && values[ids[index]] ? values[ids[index]].value : 0;
 
-          const getValue = (index) =>
-            ids[index] && values[ids[index]] ? values[ids[index]].value : 0;
+        // Mapping based on user instruction: U1(0), U2(1), U3(2), ...
+        const u1 = getValue(0);
+        const u2 = getValue(1);
+        const u3 = getValue(2);
 
-          // Mapping based on user instruction: U1(0), U2(1), U3(2), ...
-          const u1 = getValue(0);
-          const u2 = getValue(1);
-          const u3 = getValue(2);
+        const i1 = getValue(3);
+        const i2 = getValue(4);
+        const i3 = getValue(5);
 
-          const i1 = getValue(3);
-          const i2 = getValue(4);
-          const i3 = getValue(5);
+        const p1 = getValue(6);
+        const p2 = getValue(7);
+        const p3 = getValue(8);
 
-          const p1 = getValue(6);
-          const p2 = getValue(7);
-          const p3 = getValue(8);
+        // Assuming subsequent values follow a logical order or are calculated
+        const pTotal = getValue(9) || p1 + p2 + p3;
 
-          // Assuming subsequent values follow a logical order or are calculated
-          const pTotal = getValue(9) || p1 + p2 + p3;
+        const pMax = getValue(10);
+        const pMin = getValue(11);
 
-          const pMax = getValue(10);
-          const pMin = getValue(11);
+        // THD values
+        const thdI1 = getValue(12);
+        const thdI2 = getValue(13);
+        const thdI3 = getValue(14);
+        const thdU1N = getValue(15);
+        const thdU2N = getValue(16);
+        const thdU3N = getValue(17);
 
-          // THD values
-          const thdI1 = getValue(12);
-          const thdI2 = getValue(13);
-          const thdI3 = getValue(14);
-          const thdU1N = getValue(15);
-          const thdU2N = getValue(16);
-          const thdU3N = getValue(17);
+        const thdMain = Math.max(thdI1, thdI2, thdI3);
 
-          const thdMain = Math.max(thdI1, thdI2, thdI3);
+        // Update Data State
+        setData({
+          summary: {
+            uTotal: (u1 + u2 + u3) / 3,
+            iTotal: i1 + i2 + i3,
+            pMax: pMax,
+            pMin: pMin,
+          },
+          voltage: { u1, u2, u3, unit: "V" },
+          current: { i1, i2, i3, unit: "A" },
+          power: { p1, p2, p3, total: pTotal, unit: "kW" },
+          maxValues: { pMax, iMax: 0 },
+          thd: {
+            main: thdMain,
+            details: { thdI1, thdI2, thdI3, thdU1N, thdU2N, thdU3N },
+          },
+        });
 
-          // Update Data State
-          setData({
-            summary: {
-              uTotal: (u1 + u2 + u3) / 3,
-              iTotal: i1 + i2 + i3,
-              pMax: pMax,
-              pMin: pMin,
-            },
-            voltage: { u1, u2, u3, unit: "V" },
-            current: { i1, i2, i3, unit: "A" },
-            power: { p1, p2, p3, total: pTotal, unit: "kW" },
-            maxValues: { pMax, iMax: 0 },
-            thd: {
-              main: thdMain,
-              details: { thdI1, thdI2, thdI3, thdU1N, thdU2N, thdU3N },
-            },
-          });
+        // Update History
+        const time = new Date().toLocaleTimeString([], { hour12: false });
 
-          // Update History
-          const time = new Date().toLocaleTimeString([], { hour12: false });
+        const updateChartData = (prev, v1, v2, v3) => {
+          const newData = [
+            ...prev,
+            { time, value1: v1, value2: v2, value3: v3 },
+          ];
+          return newData.slice(-20); // Keep last 20 points
+        };
 
-          const updateChartData = (prev, v1, v2, v3) => {
-            const newData = [
-              ...prev,
-              { time, value1: v1, value2: v2, value3: v3 },
-            ];
-            return newData.slice(-20); // Keep last 20 points
-          };
-
-          setVoltageHistory((prev) => updateChartData(prev, u1, u2, u3));
-          setCurrentHistory((prev) => updateChartData(prev, i1, i2, i3));
-          setPowerHistory((prev) => updateChartData(prev, p1, p2, p3));
-          setThdHistory((prev) => updateChartData(prev, thdI1, thdI2, thdI3));
-        },
-      });
-    };
-
-    initEraWidget();
+        setVoltageHistory((prev) => updateChartData(prev, u1, u2, u3));
+        setCurrentHistory((prev) => updateChartData(prev, i1, i2, i3));
+        setPowerHistory((prev) => updateChartData(prev, p1, p2, p3));
+        setThdHistory((prev) => updateChartData(prev, thdI1, thdI2, thdI3));
+      },
+    });
   }, []);
 
   return (
@@ -162,25 +150,25 @@ function App() {
         <div className="header-item">
           <span className="header-label">U TOTAL</span>
           <span className="header-value">
-            {data.summary.uTotal.toFixed(1)} V
+            {data.summary.uTotal.toFixed(2)} V
           </span>
         </div>
         <div className="header-item">
           <span className="header-label">I TOTAL</span>
           <span className="header-value">
-            {data.summary.iTotal.toFixed(1)} A
+            {data.summary.iTotal.toFixed(2)} A
           </span>
         </div>
         <div className="header-item">
           <span className="header-label">P MAX</span>
           <span className="header-value">
-            {data.summary.pMax.toFixed(1)} kW
+            {data.summary.pMax.toFixed(2)} kW
           </span>
         </div>
         <div className="header-item">
           <span className="header-label">P MIN</span>
           <span className="header-value">
-            {data.summary.pMin.toFixed(1)} kW
+            {data.summary.pMin.toFixed(2)} kW
           </span>
         </div>
       </div>
@@ -197,19 +185,19 @@ function App() {
             <div className="phase-item">
               <span className="phase-label">U1</span>
               <span className="phase-value">
-                {data.voltage.u1.toFixed(1)} {data.voltage.unit}
+                {data.voltage.u1.toFixed(2)} {data.voltage.unit}
               </span>
             </div>
             <div className="phase-item">
               <span className="phase-label">U2</span>
               <span className="phase-value">
-                {data.voltage.u2.toFixed(1)} {data.voltage.unit}
+                {data.voltage.u2.toFixed(2)} {data.voltage.unit}
               </span>
             </div>
             <div className="phase-item">
               <span className="phase-label">U3</span>
               <span className="phase-value">
-                {data.voltage.u3.toFixed(1)} {data.voltage.unit}
+                {data.voltage.u3.toFixed(2)} {data.voltage.unit}
               </span>
             </div>
           </div>
@@ -236,19 +224,19 @@ function App() {
             <div className="phase-item">
               <span className="phase-label">I1</span>
               <span className="phase-value">
-                {data.current.i1.toFixed(1)} {data.current.unit}
+                {data.current.i1.toFixed(2)} {data.current.unit}
               </span>
             </div>
             <div className="phase-item">
               <span className="phase-label">I2</span>
               <span className="phase-value">
-                {data.current.i2.toFixed(1)} {data.current.unit}
+                {data.current.i2.toFixed(2)} {data.current.unit}
               </span>
             </div>
             <div className="phase-item">
               <span className="phase-label">I3</span>
               <span className="phase-value">
-                {data.current.i3.toFixed(1)} {data.current.unit}
+                {data.current.i3.toFixed(2)} {data.current.unit}
               </span>
             </div>
           </div>
@@ -275,25 +263,25 @@ function App() {
             <div className="phase-item">
               <span className="phase-label">P1</span>
               <span className="phase-value">
-                {data.power.p1.toFixed(1)} {data.power.unit}
+                {data.power.p1.toFixed(2)} {data.power.unit}
               </span>
             </div>
             <div className="phase-item">
               <span className="phase-label">P2</span>
               <span className="phase-value">
-                {data.power.p2.toFixed(1)} {data.power.unit}
+                {data.power.p2.toFixed(2)} {data.power.unit}
               </span>
             </div>
             <div className="phase-item">
               <span className="phase-label">P3</span>
               <span className="phase-value">
-                {data.power.p3.toFixed(1)} {data.power.unit}
+                {data.power.p3.toFixed(2)} {data.power.unit}
               </span>
             </div>
             <div className="phase-item total-power">
               <span className="phase-label">Total</span>
               <span className="phase-value">
-                {data.power.total.toFixed(1)} {data.power.unit}
+                {data.power.total.toFixed(2)} {data.power.unit}
               </span>
             </div>
           </div>
@@ -328,11 +316,11 @@ function App() {
 
           <div className="sub-value">
             <span>Pmin:</span>
-            <span>{data.summary.pMin.toFixed(1)} kW</span>
+            <span>{data.summary.pMin.toFixed(2)} kW</span>
           </div>
           <div className="sub-value">
             <span>Pmax:</span>
-            <span>{data.summary.pMax.toFixed(1)} kW</span>
+            <span>{data.summary.pMax.toFixed(2)} kW</span>
           </div>
         </div>
 
@@ -343,7 +331,7 @@ function App() {
             <span className="icon">📊</span>
           </div>
           <div>
-            <span className="panel-value">{data.thd.main.toFixed(1)}</span>
+            <span className="panel-value">{data.thd.main.toFixed(2)}</span>
             <span className="panel-unit">%</span>
           </div>
 
@@ -370,27 +358,27 @@ function App() {
             <div className="thd-grid">
               <div className="thd-item">
                 <span>THD I1</span>
-                <span>{data.thd.details.thdI1.toFixed(1)}%</span>
+                <span>{data.thd.details.thdI1.toFixed(2)}%</span>
               </div>
               <div className="thd-item">
                 <span>THD I2</span>
-                <span>{data.thd.details.thdI2.toFixed(1)}%</span>
+                <span>{data.thd.details.thdI2.toFixed(2)}%</span>
               </div>
               <div className="thd-item">
                 <span>THD I3</span>
-                <span>{data.thd.details.thdI3.toFixed(1)}%</span>
+                <span>{data.thd.details.thdI3.toFixed(2)}%</span>
               </div>
               <div className="thd-item">
                 <span>THD U1-N</span>
-                <span>{data.thd.details.thdU1N.toFixed(1)}%</span>
+                <span>{data.thd.details.thdU1N.toFixed(2)}%</span>
               </div>
               <div className="thd-item">
                 <span>THD U2-N</span>
-                <span>{data.thd.details.thdU2N.toFixed(1)}%</span>
+                <span>{data.thd.details.thdU2N.toFixed(2)}%</span>
               </div>
               <div className="thd-item">
                 <span>THD U3-N</span>
-                <span>{data.thd.details.thdU3N.toFixed(1)}%</span>
+                <span>{data.thd.details.thdU3N.toFixed(2)}%</span>
               </div>
             </div>
           )}

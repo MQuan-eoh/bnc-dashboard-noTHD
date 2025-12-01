@@ -34,7 +34,7 @@ body {
   /* Added linear-gradient to darken the image directly on the body */
   /* background-image: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)),
     url("background1.jpg"); */
-  background-color: #eef2f6; /* Light cool grey for a modern look */
+  background-color: #ffffff; /* Light cool grey for a modern look */
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
