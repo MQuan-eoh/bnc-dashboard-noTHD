@@ -79,6 +79,10 @@ const Header = ({ activePower, activeEnergy }) => {
 function App() {
   const [showFullTHD, setShowFullTHD] = useState(false);
   const configIdsRef = useRef([]);
+  const lastPMinUpdateRef = useRef(0);
+  const currentPMinRef = useRef(Infinity);
+  const lastPMaxUpdateRef = useRef(0);
+  const currentPMaxRef = useRef(-Infinity);
 
   // Initial Data State
   const [data, setData] = useState({
@@ -197,26 +201,53 @@ function App() {
         const p3 = getValue(8);
 
         // Assuming subsequent values follow a logical order or are calculated
-        const pTotal = getValue(9) || p1 + p2 + p3;
+        const pTotal = p1 + p2 + p3;
 
-        const pMax = getValue(10);
-        const pMin = getValue(11);
+        const now = Date.now();
+
+        // Update PMax
+        if (now - lastPMaxUpdateRef.current >= 5000) {
+          const currentBatchMax = Math.max(p1, p2, p3);
+          if (
+            currentPMaxRef.current === -Infinity ||
+            currentBatchMax > currentPMaxRef.current
+          ) {
+            currentPMaxRef.current = currentBatchMax;
+          }
+          lastPMaxUpdateRef.current = now;
+        }
+        const pMax =
+          currentPMaxRef.current === -Infinity ? 0 : currentPMaxRef.current;
+
+        // Update PMin
+        if (now - lastPMinUpdateRef.current >= 5000) {
+          const currentBatchMin = Math.min(p1, p2, p3);
+          if (
+            currentPMinRef.current === Infinity ||
+            currentBatchMin < currentPMinRef.current
+          ) {
+            currentPMinRef.current = currentBatchMin;
+          }
+          lastPMinUpdateRef.current = now;
+        }
+        const pMin =
+          currentPMinRef.current === Infinity ? 0 : currentPMinRef.current;
 
         // THD values
-        const thdI1 = getValue(12);
-        const thdI2 = getValue(13);
-        const thdI3 = getValue(14);
-        const thdU1N = getValue(15);
-        const thdU2N = getValue(16);
-        const thdU3N = getValue(17);
+        const thdI1 = getValue(9);
+        const thdI2 = getValue(10);
+        const thdI3 = getValue(11);
+        const thdU1N = getValue(12);
+        const thdU2N = getValue(13);
+        const thdU3N = getValue(14);
 
-        const activePowerTotal = getValue(18);
-        const activeEnergyDelivered = getValue(19);
+        const activePowerTotal = getValue(15);
+        const activeEnergyDelivered = getValue(16);
 
-        const pf1 = getValue(20);
-        const pf2 = getValue(21);
-        const pf3 = getValue(22);
-        const pfTotal = getValue(23);
+        const pf1 = getValue(17);
+        const pf2 = getValue(18);
+        const pf3 = getValue(19);
+        const pfTotal = getValue(20);
 
         const thdMain = Math.max(thdI1, thdI2, thdI3);
         const time = new Date().toLocaleTimeString([], { hour12: false });
