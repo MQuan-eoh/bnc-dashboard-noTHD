@@ -384,6 +384,13 @@
     font-size: 0.95rem;
     text-align: right;
   }
+
+  /* Standardize value sizes for mobile */
+  .phase-value,
+  .panel-value,
+  .thd-item span:last-child {
+    font-size: 0.95rem !important;
+  }
 }
 
 /* Hide time on tablet and mobile to save space */
