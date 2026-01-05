@@ -75,10 +75,7 @@ const Header = ({ activePower, activeEnergy, acId }) => {
           </span>
         </span>
       </div>
-      <div className="header-item">
-        <span className="header-label">AC ID</span>
-        <span className="header-value">{acId || "--"}</span>
-      </div>
+
       <div className="header-item">
         <span className="header-label">Power Total</span>
         <span className="header-value">{activePower.toFixed(2)} kW</span>
@@ -252,10 +249,6 @@ function App() {
       const pf2 = getValue(18);
       const pf3 = getValue(19);
       const pfTotal = getValue(20);
-
-      // AC ID to distinguish between devices (Index 21)
-      const acId = getValue(21, "");
-
       const thdMain = Math.max(thdI1, thdI2, thdI3);
       const time = new Date().toLocaleTimeString([], { hour12: false });
 
