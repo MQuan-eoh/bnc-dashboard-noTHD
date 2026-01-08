@@ -5,54 +5,6 @@ import Bar3DChart from "./components/Bar3DChart";
 import ThemeSettings from "./components/ThemeSettings";
 import eraWidget from "@eohjsc/era-widget";
 
-const MinMaxTable = ({
-  phase1,
-  phase2,
-  phase3,
-  headers = ["Phase 1", "Phase 2", "Phase 3"],
-}) => {
-  const format = (val) =>
-    val === Infinity || val === -Infinity || val === null
-      ? "--"
-      : val.toFixed(2);
-
-  const renderValue = (val, time) => (
-    <div className="mm-value tooltip-container">
-      {format(val)}
-      {time && (
-        <div className="tooltip-content">
-          <div className="tooltip-icon">🕒</div>
-          <div className="tooltip-info">
-            <span className="tooltip-label">Recorded at</span>
-            <span className="tooltip-time">{time}</span>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-
-  return (
-    <div className="min-max-container">
-      <div className="min-max-grid">
-        <div className="mm-header"></div>
-        <div className="mm-header">{headers[0]}</div>
-        <div className="mm-header">{headers[1]}</div>
-        <div className="mm-header">{headers[2]}</div>
-
-        <div className="mm-label">Min</div>
-        {renderValue(phase1.min, phase1.minTime)}
-        {renderValue(phase2.min, phase2.minTime)}
-        {renderValue(phase3.min, phase3.minTime)}
-
-        <div className="mm-label">Max</div>
-        {renderValue(phase1.max, phase1.maxTime)}
-        {renderValue(phase2.max, phase2.maxTime)}
-        {renderValue(phase3.max, phase3.maxTime)}
-      </div>
-    </div>
-  );
-};
-
 const Header = ({ activePower, activeEnergy, acId }) => {
   const [currentTime, setCurrentTime] = useState(new Date());
 
@@ -77,11 +29,11 @@ const Header = ({ activePower, activeEnergy, acId }) => {
       </div>
 
       <div className="header-item">
-        <span className="header-label">Power Total</span>
+        <span className="header-label">Active Power</span>
         <span className="header-value">{activePower.toFixed(2)} kW</span>
       </div>
       <div className="header-item">
-        <span className="header-label">Energy Delivered</span>
+        <span className="header-label">Active Energy</span>
         <span className="header-value">{activeEnergy.toFixed(2)} kWh</span>
       </div>
     </div>
@@ -441,12 +393,6 @@ function App() {
             unit="V"
             height="150px"
           />
-          <MinMaxTable
-            phase1={data.dailyMinMax.voltage.u1}
-            phase2={data.dailyMinMax.voltage.u2}
-            phase3={data.dailyMinMax.voltage.u3}
-            headers={["U12", "U23", "U31"]}
-          />
         </div>
 
         {/* Current */}
@@ -485,12 +431,6 @@ function App() {
             ]}
             unit="A"
             height="150px"
-          />
-          <MinMaxTable
-            phase1={data.dailyMinMax.current.i1}
-            phase2={data.dailyMinMax.current.i2}
-            phase3={data.dailyMinMax.current.i3}
-            headers={["I12", "I23", "I31"]}
           />
         </div>
 
@@ -531,12 +471,6 @@ function App() {
             unit="kW"
             height="150px"
           />
-          <MinMaxTable
-            phase1={data.dailyMinMax.power.p1}
-            phase2={data.dailyMinMax.power.p2}
-            phase3={data.dailyMinMax.power.p3}
-            headers={["P12", "P23", "P31"]}
-          />
         </div>
 
         {/* Cos Phi */}
@@ -569,12 +503,6 @@ function App() {
             ]}
             unit=""
             height="150px"
-          />
-          <MinMaxTable
-            phase1={data.dailyMinMax.cosPhi?.pf1 || { min: 0, max: 0 }}
-            phase2={data.dailyMinMax.cosPhi?.pf2 || { min: 0, max: 0 }}
-            phase3={data.dailyMinMax.cosPhi?.pf3 || { min: 0, max: 0 }}
-            headers={["PF1", "PF2", "PF3"]}
           />
         </div>
 
