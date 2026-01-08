@@ -424,6 +424,7 @@ function App() {
               </span>
             </div>
             <div className="phase-item">
+              <span className="phase-label">U31</span>
               <span className="phase-value">
                 {data.voltage.u3.toFixed(2)} {data.voltage.unit}
               </span>
