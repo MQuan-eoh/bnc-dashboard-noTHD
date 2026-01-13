@@ -45,39 +45,37 @@ function App() {
   const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
   const configIdsRef = useRef([]);
   const pendingValuesRef = useRef(null);
-  const lastPMinUpdateRef = useRef(0);
-  const currentPMinRef = useRef(Infinity);
-  const lastPMaxUpdateRef = useRef(0);
-  const currentPMaxRef = useRef(-Infinity);
 
   // Initial Data State
   const [data, setData] = useState({
-    summary: {
-      uTotal: 0,
-      iTotal: 0,
-      pMax: 0,
-      pMin: 0,
-    },
     voltage: {
       u1: 0,
       u2: 0,
       u3: 0,
+      uMax1: 0,
+      uMax2: 0,
+      uMax3: 0,
       unit: "V",
     },
     current: {
       i1: 0,
       i2: 0,
       i3: 0,
+      iMax1: 0,
+      iMax2: 0,
+      iMax3: 0,
       unit: "A",
     },
     power: {
       p1: 0,
       p2: 0,
       p3: 0,
+      pMax1: 0,
+      pMax2: 0,
+      pMax3: 0,
       total: 0,
       unit: "kW",
     },
-    maxValues: { pMax: 0, iMax: 0 },
     thd: {
       main: 0,
       details: {
@@ -87,28 +85,6 @@ function App() {
         thdU1N: 0,
         thdU2N: 0,
         thdU3N: 0,
-      },
-    },
-    dailyMinMax: {
-      voltage: {
-        u1: { min: null, max: null },
-        u2: { min: null, max: null },
-        u3: { min: null, max: null },
-      },
-      current: {
-        i1: { min: null, max: null },
-        i2: { min: null, max: null },
-        i3: { min: null, max: null },
-      },
-      power: {
-        p1: { min: null, max: null },
-        p2: { min: null, max: null },
-        p3: { min: null, max: null },
-      },
-      cosPhi: {
-        pf1: { min: null, max: null },
-        pf2: { min: null, max: null },
-        pf3: { min: null, max: null },
       },
     },
     extra: {
@@ -157,36 +133,6 @@ function App() {
       // Assuming subsequent values follow a logical order or are calculated
       const pTotal = p1 + p2 + p3;
 
-      const now = Date.now();
-
-      // Update PMax
-      if (now - lastPMaxUpdateRef.current >= 5000) {
-        const currentBatchMax = Math.max(p1, p2, p3);
-        if (
-          currentPMaxRef.current === -Infinity ||
-          currentBatchMax > currentPMaxRef.current
-        ) {
-          currentPMaxRef.current = currentBatchMax;
-        }
-        lastPMaxUpdateRef.current = now;
-      }
-      const pMax =
-        currentPMaxRef.current === -Infinity ? 0 : currentPMaxRef.current;
-
-      // Update PMin
-      if (now - lastPMinUpdateRef.current >= 5000) {
-        const currentBatchMin = Math.min(p1, p2, p3);
-        if (
-          currentPMinRef.current === Infinity ||
-          currentBatchMin < currentPMinRef.current
-        ) {
-          currentPMinRef.current = currentBatchMin;
-        }
-        lastPMinUpdateRef.current = now;
-      }
-      const pMin =
-        currentPMinRef.current === Infinity ? 0 : currentPMinRef.current;
-
       // THD values
       const thdI1 = getValue(9);
       const thdI2 = getValue(10);
@@ -202,91 +148,33 @@ function App() {
       const pf2 = getValue(18);
       const pf3 = getValue(19);
       const pfTotal = getValue(20);
+
+      // Max Values
+      const uMax1 = getValue(21);
+      const uMax2 = getValue(22);
+      const uMax3 = getValue(23);
+
+      const iMax1 = getValue(24);
+      const iMax2 = getValue(25);
+      const iMax3 = getValue(26);
+
+      const pMax1 = getValue(27);
+      const pMax2 = getValue(28);
+      const pMax3 = getValue(29);
+
       const thdMain = Math.max(thdI1, thdI2, thdI3);
       const time = new Date().toLocaleTimeString([], { hour12: false });
 
       // Update Data State
-      setData((prev) => {
-        const updateMinMax = (prevVal, newVal, currentTime) => {
-          const currentMin = prevVal.min;
-          const currentMax = prevVal.max;
-          const currentMinTime = prevVal.minTime || null;
-          const currentMaxTime = prevVal.maxTime || null;
-
-          let nextMin = currentMin;
-          let nextMinTime = currentMinTime;
-          let nextMax = currentMax;
-          let nextMaxTime = currentMaxTime;
-
-          if (currentMin === null || newVal < currentMin) {
-            nextMin = newVal;
-            nextMinTime = currentTime;
-          }
-
-          if (currentMax === null || newVal > currentMax) {
-            nextMax = newVal;
-            nextMaxTime = currentTime;
-          }
-
-          return {
-            min: nextMin,
-            minTime: nextMinTime,
-            max: nextMax,
-            maxTime: nextMaxTime,
-          };
-        };
-
-        const newDailyMinMax = {
-          voltage: {
-            u1: updateMinMax(prev.dailyMinMax.voltage.u1, u1, time),
-            u2: updateMinMax(prev.dailyMinMax.voltage.u2, u2, time),
-            u3: updateMinMax(prev.dailyMinMax.voltage.u3, u3, time),
-          },
-          current: {
-            i1: updateMinMax(prev.dailyMinMax.current.i1, i1, time),
-            i2: updateMinMax(prev.dailyMinMax.current.i2, i2, time),
-            i3: updateMinMax(prev.dailyMinMax.current.i3, i3, time),
-          },
-          power: {
-            p1: updateMinMax(prev.dailyMinMax.power.p1, p1, time),
-            p2: updateMinMax(prev.dailyMinMax.power.p2, p2, time),
-            p3: updateMinMax(prev.dailyMinMax.power.p3, p3, time),
-          },
-          cosPhi: {
-            pf1: updateMinMax(
-              prev.dailyMinMax.cosPhi?.pf1 || { min: null, max: null },
-              pf1,
-              time
-            ),
-            pf2: updateMinMax(
-              prev.dailyMinMax.cosPhi?.pf2 || { min: null, max: null },
-              pf2,
-              time
-            ),
-            pf3: updateMinMax(
-              prev.dailyMinMax.cosPhi?.pf3 || { min: null, max: null },
-              pf3,
-              time
-            ),
-          },
-        };
-
+      setData(() => {
         return {
-          summary: {
-            uTotal: (u1 + u2 + u3) / 3,
-            iTotal: i1 + i2 + i3,
-            pMax: pMax,
-            pMin: pMin,
-          },
-          voltage: { u1, u2, u3, unit: "V" },
-          current: { i1, i2, i3, unit: "A" },
-          power: { p1, p2, p3, total: pTotal, unit: "kW" },
-          maxValues: { pMax, iMax: 0 },
+          voltage: { u1, u2, u3, uMax1, uMax2, uMax3, unit: "V" },
+          current: { i1, i2, i3, iMax1, iMax2, iMax3, unit: "A" },
+          power: { p1, p2, p3, pMax1, pMax2, pMax3, total: pTotal, unit: "kW" },
           thd: {
             main: thdMain,
             details: { thdI1, thdI2, thdI3, thdU1N, thdU2N, thdU3N },
           },
-          dailyMinMax: newDailyMinMax,
           extra: {
             activePowerTotal,
             activeEnergyDelivered,
@@ -318,7 +206,7 @@ function App() {
       needRealtimeConfigs: true,
       needHistoryConfigs: true,
       needActions: true,
-      maxRealtimeConfigsCount: 24,
+      maxRealtimeConfigsCount: 30,
       maxHistoryConfigsCount: 1,
       maxActionsCount: 2,
       minRealtimeConfigsCount: 0,
@@ -393,6 +281,26 @@ function App() {
             unit="V"
             height="150px"
           />
+          <div className="max-values-container">
+            <div className="max-item">
+              <span className="max-label">Max U12</span>
+              <span className="max-value">
+                {data.voltage.uMax1.toFixed(2)} {data.voltage.unit}
+              </span>
+            </div>
+            <div className="max-item">
+              <span className="max-label">Max U23</span>
+              <span className="max-value">
+                {data.voltage.uMax2.toFixed(2)} {data.voltage.unit}
+              </span>
+            </div>
+            <div className="max-item">
+              <span className="max-label">Max U31</span>
+              <span className="max-value">
+                {data.voltage.uMax3.toFixed(2)} {data.voltage.unit}
+              </span>
+            </div>
+          </div>
         </div>
 
         {/* Current */}
@@ -432,6 +340,26 @@ function App() {
             unit="A"
             height="150px"
           />
+          <div className="max-values-container">
+            <div className="max-item">
+              <span className="max-label">Max I12</span>
+              <span className="max-value">
+                {data.current.iMax1.toFixed(2)} {data.current.unit}
+              </span>
+            </div>
+            <div className="max-item">
+              <span className="max-label">Max I23</span>
+              <span className="max-value">
+                {data.current.iMax2.toFixed(2)} {data.current.unit}
+              </span>
+            </div>
+            <div className="max-item">
+              <span className="max-label">Max I31</span>
+              <span className="max-value">
+                {data.current.iMax3.toFixed(2)} {data.current.unit}
+              </span>
+            </div>
+          </div>
         </div>
 
         {/* Power */}
@@ -471,6 +399,26 @@ function App() {
             unit="kW"
             height="150px"
           />
+          <div className="max-values-container">
+            <div className="max-item">
+              <span className="max-label">Max P12</span>
+              <span className="max-value">
+                {data.power.pMax1.toFixed(2)} {data.power.unit}
+              </span>
+            </div>
+            <div className="max-item">
+              <span className="max-label">Max P23</span>
+              <span className="max-value">
+                {data.power.pMax2.toFixed(2)} {data.power.unit}
+              </span>
+            </div>
+            <div className="max-item">
+              <span className="max-label">Max P31</span>
+              <span className="max-value">
+                {data.power.pMax3.toFixed(2)} {data.power.unit}
+              </span>
+            </div>
+          </div>
         </div>
 
         {/* Cos Phi */}
