@@ -41,7 +41,6 @@ const Header = ({ activePower, activeEnergy, acId }) => {
 };
 
 function App() {
-  const [showFullTHD, setShowFullTHD] = useState(false);
   const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
   const configIdsRef = useRef([]);
   const pendingValuesRef = useRef(null);
@@ -477,41 +476,32 @@ function App() {
             height="150px"
           />
 
-          <button
-            className="collapse-btn"
-            onClick={() => setShowFullTHD(!showFullTHD)}
-          >
-            {showFullTHD ? "Hide Details" : "Show More Details"}
-          </button>
-
-          {showFullTHD && (
-            <div className="thd-grid">
-              <div className="thd-item">
-                <span>THD I12</span>
-                <span>{data.thd.details.thdI1.toFixed(2)}%</span>
-              </div>
-              <div className="thd-item">
-                <span>THD I23</span>
-                <span>{data.thd.details.thdI2.toFixed(2)}%</span>
-              </div>
-              <div className="thd-item">
-                <span>THD I31</span>
-                <span>{data.thd.details.thdI3.toFixed(2)}%</span>
-              </div>
-              <div className="thd-item">
-                <span>THD U12</span>
-                <span>{data.thd.details.thdU1N.toFixed(2)}%</span>
-              </div>
-              <div className="thd-item">
-                <span>THD U23</span>
-                <span>{data.thd.details.thdU2N.toFixed(2)}%</span>
-              </div>
-              <div className="thd-item">
-                <span>THD U31</span>
-                <span>{data.thd.details.thdU3N.toFixed(2)}%</span>
-              </div>
+          <div className="thd-grid">
+            <div className="thd-item">
+              <span>THD I12</span>
+              <span>{data.thd.details.thdI1.toFixed(2)}%</span>
             </div>
-          )}
+            <div className="thd-item">
+              <span>THD I23</span>
+              <span>{data.thd.details.thdI2.toFixed(2)}%</span>
+            </div>
+            <div className="thd-item">
+              <span>THD I31</span>
+              <span>{data.thd.details.thdI3.toFixed(2)}%</span>
+            </div>
+            <div className="thd-item">
+              <span>THD U12</span>
+              <span>{data.thd.details.thdU1N.toFixed(2)}%</span>
+            </div>
+            <div className="thd-item">
+              <span>THD U23</span>
+              <span>{data.thd.details.thdU2N.toFixed(2)}%</span>
+            </div>
+            <div className="thd-item">
+              <span>THD U31</span>
+              <span>{data.thd.details.thdU3N.toFixed(2)}%</span>
+            </div>
+          </div>
         </div>
       </div>
       <ThemeSettings />
