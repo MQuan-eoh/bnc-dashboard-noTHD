@@ -391,6 +391,14 @@
   .thd-item span:last-child {
     font-size: 0.95rem !important;
   }
+
+  .thd-item {
+    background: #ffffff0d;
+  }
+  
+  .thd-item span:last-child {
+    color: #ffffff;
+  }
 }
 
 /* Hide time on tablet and mobile to save space */
