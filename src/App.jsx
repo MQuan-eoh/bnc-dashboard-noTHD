@@ -75,17 +75,7 @@ function App() {
       total: 0,
       unit: "kW",
     },
-    thd: {
-      main: 0,
-      details: {
-        thdI1: 0,
-        thdI2: 0,
-        thdI3: 0,
-        thdU1N: 0,
-        thdU2N: 0,
-        thdU3N: 0,
-      },
-    },
+
     extra: {
       activePowerTotal: 0,
       activeEnergyDelivered: 0,
@@ -104,7 +94,7 @@ function App() {
   const [currentHistory, setCurrentHistory] = useState([]);
   const [powerHistory, setPowerHistory] = useState([]);
   const [cosPhiHistory, setCosPhiHistory] = useState([]);
-  const [thdHistory, setThdHistory] = useState([]);
+
 
   useEffect(() => {
     const processValues = (values) => {
@@ -132,13 +122,7 @@ function App() {
       // Assuming subsequent values follow a logical order or are calculated
       const pTotal = p1 + p2 + p3;
 
-      // THD values
-      const thdI1 = getValue(9);
-      const thdI2 = getValue(10);
-      const thdI3 = getValue(11);
-      const thdU1N = getValue(12);
-      const thdU2N = getValue(13);
-      const thdU3N = getValue(14);
+
 
       const activePowerTotal = getValue(15);
       const activeEnergyDelivered = getValue(16);
@@ -161,7 +145,7 @@ function App() {
       const pMax2 = getValue(28);
       const pMax3 = getValue(29);
 
-      const thdMain = Math.max(thdI1, thdI2, thdI3);
+
       const time = new Date().toLocaleTimeString([], { hour12: false });
 
       // Update Data State
@@ -170,10 +154,7 @@ function App() {
           voltage: { u1, u2, u3, uMax1, uMax2, uMax3, unit: "V" },
           current: { i1, i2, i3, iMax1, iMax2, iMax3, unit: "A" },
           power: { p1, p2, p3, pMax1, pMax2, pMax3, total: pTotal, unit: "kW" },
-          thd: {
-            main: thdMain,
-            details: { thdI1, thdI2, thdI3, thdU1N, thdU2N, thdU3N },
-          },
+
           extra: {
             activePowerTotal,
             activeEnergyDelivered,
@@ -198,7 +179,7 @@ function App() {
       setCurrentHistory((prev) => updateChartData(prev, i1, i2, i3));
       setPowerHistory((prev) => updateChartData(prev, p1, p2, p3));
       setCosPhiHistory((prev) => updateChartData(prev, pf1, pf2, pf3));
-      setThdHistory((prev) => updateChartData(prev, thdI1, thdI2, thdI3));
+
     };
 
     eraWidget.init({
@@ -453,56 +434,7 @@ function App() {
           />
         </div>
 
-        {/* THD */}
-        <div className="glass-panel" style={{ gridColumn: "span 1" }}>
-          <div className="panel-header">
-            <span className="panel-title">THD (Total Harmonic Distortion)</span>
-            <span className="icon">📊</span>
-          </div>
-          <div>
-            <span className="panel-value">{data.thd.main.toFixed(2)}</span>
-            <span className="panel-unit">%</span>
-          </div>
 
-          <EnergyChart
-            id="thdChart"
-            data={thdHistory}
-            lines={[
-              { key: "value1", color: "#2962FF", name: "THD12" },
-              { key: "value2", color: "#00B0FF", name: "THD23" },
-              { key: "value3", color: "#00E5FF", name: "THD31" },
-            ]}
-            unit="%"
-            height="150px"
-          />
-
-          <div className="thd-grid">
-            <div className="thd-item">
-              <span>THD I12</span>
-              <span>{data.thd.details.thdI1.toFixed(2)}%</span>
-            </div>
-            <div className="thd-item">
-              <span>THD I23</span>
-              <span>{data.thd.details.thdI2.toFixed(2)}%</span>
-            </div>
-            <div className="thd-item">
-              <span>THD I31</span>
-              <span>{data.thd.details.thdI3.toFixed(2)}%</span>
-            </div>
-            <div className="thd-item">
-              <span>THD U12</span>
-              <span>{data.thd.details.thdU1N.toFixed(2)}%</span>
-            </div>
-            <div className="thd-item">
-              <span>THD U23</span>
-              <span>{data.thd.details.thdU2N.toFixed(2)}%</span>
-            </div>
-            <div className="thd-item">
-              <span>THD U31</span>
-              <span>{data.thd.details.thdU3N.toFixed(2)}%</span>
-            </div>
-          </div>
-        </div>
       </div>
       <ThemeSettings />
     </div>

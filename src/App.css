@@ -206,21 +206,7 @@
   background: rgba(255, 255, 255, 0.2);
 }
 
-.thd-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.5rem;
-  margin-top: 1rem;
-}
 
-.thd-item {
-  background: rgba(0, 0, 0, 0.2);
-  padding: 0.5rem;
-  border-radius: 6px;
-  font-size: 0.85rem;
-  display: flex;
-  justify-content: space-between;
-}
 
 .min-max-container {
   margin-top: 1rem;
@@ -387,17 +373,8 @@
 
   /* Standardize value sizes for mobile */
   .phase-value,
-  .panel-value,
-  .thd-item span:last-child {
+  .panel-value {
     font-size: 0.95rem !important;
-  }
-
-  .thd-item {
-    background: #ffffff0d;
-  }
-  
-  .thd-item span:last-child {
-    color: #ffffff;
   }
 }
 
