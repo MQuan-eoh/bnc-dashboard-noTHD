@@ -35,8 +35,8 @@ const EnergyChart = ({
           data={data}
           margin={{
             top: 5,
-            right: 0,
-            left: -20,
+            right: 5,
+            left: 0,
             bottom: 0,
           }}
         >
@@ -55,10 +55,17 @@ const EnergyChart = ({
           />
           <YAxis
             stroke="#ffffffff"
-            fontSize={12}
+            fontSize={11}
             tickLine={false}
             axisLine={false}
+            width={45}
+            tickCount={4}
             unit={unit}
+            tickFormatter={(value) => {
+              if (value >= 1000) return `${(value / 1000).toFixed(1)}k`;
+              if (value >= 100) return value.toFixed(0);
+              return value.toFixed(1);
+            }}
           />
           <Tooltip
             contentStyle={{

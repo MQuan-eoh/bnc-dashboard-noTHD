@@ -44,6 +44,7 @@ function App() {
   const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
   const configIdsRef = useRef([]);
   const pendingValuesRef = useRef(null);
+  const lastChartUpdateRef = useRef(0);
 
   // Initial Data State
   const [data, setData] = useState({
@@ -169,16 +170,23 @@ function App() {
       });
 
       // Update History
+      const now = Date.now();
+      const SAMPLE_INTERVAL_MS = 10000; // Sample every 10 seconds
+      const MAX_DATA_POINTS = 60;       // 60 points × 10s = 10 minutes
 
-      const updateChartData = (prev, v1, v2, v3) => {
-        const newData = [...prev, { time, value1: v1, value2: v2, value3: v3 }];
-        return newData.slice(-20); // Keep last 20 points
-      };
+      if (now - lastChartUpdateRef.current >= SAMPLE_INTERVAL_MS) {
+        lastChartUpdateRef.current = now;
 
-      setVoltageHistory((prev) => updateChartData(prev, u1, u2, u3));
-      setCurrentHistory((prev) => updateChartData(prev, i1, i2, i3));
-      setPowerHistory((prev) => updateChartData(prev, p1, p2, p3));
-      setCosPhiHistory((prev) => updateChartData(prev, pf1, pf2, pf3));
+        const updateChartData = (prev, v1, v2, v3) => {
+          const newData = [...prev, { time, value1: v1, value2: v2, value3: v3 }];
+          return newData.slice(-MAX_DATA_POINTS); // Keep last 60 points
+        };
+
+        setVoltageHistory((prev) => updateChartData(prev, u1, u2, u3));
+        setCurrentHistory((prev) => updateChartData(prev, i1, i2, i3));
+        setPowerHistory((prev) => updateChartData(prev, p1, p2, p3));
+        setCosPhiHistory((prev) => updateChartData(prev, pf1, pf2, pf3));
+      }
 
     };
 
@@ -254,9 +262,9 @@ function App() {
             id="voltageChart"
             data={voltageHistory}
             lines={[
-              { key: "value1", color: "#FFD700", name: "U12" },
-              { key: "value2", color: "#FF9100", name: "U23" },
-              { key: "value3", color: "#FFFF00", name: "U31" },
+              { key: "value1", color: "#FF5252", name: "U12" },
+              { key: "value2", color: "#4CAF50", name: "U23" },
+              { key: "value3", color: "#2196F3", name: "U31" },
             ]}
             unit="V"
             height="150px"
@@ -425,9 +433,9 @@ function App() {
             id="cosPhiChart"
             data={cosPhiHistory}
             lines={[
-              { key: "value1", color: "#FFD700", name: "PF1" },
-              { key: "value2", color: "#FF9100", name: "PF2" },
-              { key: "value3", color: "#FFFF00", name: "PF3" },
+              { key: "value1", color: "#E040FB", name: "PF1" },
+              { key: "value2", color: "#7C4DFF", name: "PF2" },
+              { key: "value3", color: "#FF4081", name: "PF3" },
             ]}
             unit=""
             height="150px"
